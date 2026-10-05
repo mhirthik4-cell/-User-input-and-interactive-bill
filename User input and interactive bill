@@ -1,0 +1,93 @@
+import pandas as pd
+from datetime import datetime
+
+monthly_budget = float(input("Enter your monthly budget: ₹"))
+number_of_expenses = int(input("How many expenses do you want to add? "))
+
+dates = []
+items = []
+amounts = []
+payment_methods = []
+
+for x in range(number_of_expenses):
+    print(f"\nEnter expense {x + 1} details")
+
+    date = input("Enter date (YYYY-MM-DD): ")
+    item = input("Enter item name: ")
+    amount = float(input("Enter expense amount: ₹"))
+    payment_method = input("Enter payment method (GPay/PhonePe/Cash/Card/Bank Transfer): ")
+
+    dates.append(date)
+    items.append(item)
+    amounts.append(amount)
+    payment_methods.append(payment_method)
+
+data = {
+    "Date": dates,
+    "Item": items,
+    "Amount": amounts,
+    "Payment Method": payment_methods
+}
+
+df = pd.DataFrame(data)
+
+df["Date"] = pd.to_datetime(df["Date"])
+df = df.sort_values("Date")
+
+total_expense = df["Amount"].sum()
+average_expense = df["Amount"].mean()
+remaining_budget = monthly_budget - total_expense
+
+monthly_expense = df.groupby(
+    df["Date"].dt.strftime("%B %Y")
+)["Amount"].sum()
+
+address = input("\nEnter your address: ")
+
+now = datetime.now()
+today_date = now.strftime("%d-%m-%Y")
+current_time = now.strftime("%I:%M %p")
+
+df.to_csv("monthly_expense_data.csv", index=False)
+
+print("\n" + "=" * 82)
+print("                      MONTHLY EXPENSE BILL")
+print("=" * 82)
+print(f"Address: {address}")
+print(f"Generated Date: {today_date}")
+print(f"Generated Time: {current_time}")
+print("-" * 82)
+
+print(f"{'DATE':<14} | {'ITEM':<22} | {'AMOUNT':<15} | {'PAYMENT METHOD':<18}")
+
+print("-" * 82)
+
+for _, row in df.iterrows():
+    date_value = row["Date"].strftime("%d-%m-%Y")
+
+    print(
+        f"{date_value:<14} | "
+        f"{row['Item']:<22} | "
+        f"₹{row['Amount']:<14.2f} | "
+        f"{row['Payment Method']:<18}"
+    )
+
+print("-" * 82)
+
+for month, amount in monthly_expense.items():
+    print(f"{'MONTHLY EXPENSE - ' + month:<60} | ₹{amount:.2f}")
+
+print(f"{'MONTHLY BUDGET':<60} | ₹{monthly_budget:.2f}")
+print(f"{'AVERAGE EXPENSE':<60} | ₹{average_expense:.2f}")
+print(f"{'REMAINING BUDGET':<60} | ₹{remaining_budget:.2f}")
+
+print("-" * 82)
+
+if total_expense > monthly_budget:
+    print("BUDGET STATUS: OVER BUDGET - Reduce your spending!")
+elif total_expense >= monthly_budget * 0.8:
+    print("BUDGET STATUS: WARNING - You used 80% or more of your budget.")
+else:
+    print("BUDGET STATUS: GOOD - You are under budget.")
+
+print("=" * 82)
